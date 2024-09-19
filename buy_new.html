@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meat Shop Bill</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+    max-width: 800px;
+    margin: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    position: relative; /* Ensure relative positioning for absolute child elements if needed */
+}
+
+        h1, h2 {
+            text-align: center;
+        }
+        .customer-info, .add-meat-form {
+            margin-bottom: 20px;
+        }
+        .customer-info input, .add-meat-form input {
+            width: calc(50% - 10px);
+            padding: 10px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .meat-list, .meat-item, .total, .print-button, .qr-code {
+            margin-bottom: 20px;
+        }
+        .meat-item {
+            display: flex;
+            align-items: center;
+        }
+        .meat-item img {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            margin-right: 20px;
+        }
+        .meat-item label {
+            flex: 1;
+            font-size: 18px;
+        }
+        .meat-item input {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .total {
+            text-align: right;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .print-button {
+    display: block;
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px; /* Adjust spacing from the top */
+    margin-left: auto; /* Pushes the button to the right */
+    margin-right: 0;   /* Optional: ensures the button is aligned to the right */
+}
+
+
+        .print-button:hover {
+            background-color: #218838;
+        }
+        .print-button-sales {
+    display: inline-block; 
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center; 
+    margin: 0 auto; 
+    display: block; 
+}
+
+        .qr-code img {
+            width: 150px;
+            height: 150px;
+            padding-left: 40%;
+            margin-top: 5%;
+        }
+        #salesSection {
+            display: none; /* Initially hide the sales section */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tasty_Meat</h1>
+        <div class="customer-info">
+            <input type="text" id="customerName" placeholder="Enter customer name" required>
+            <input type="text" id="customerMobile" placeholder="Enter customer mobile number" required>
+        </div>
+        
+        <div class="add-meat-form">
+            <input type="text" id="meatName" placeholder="Enter meat name">
+            <input type="number" id="meatPrice" placeholder="Price per kg" min="0" step="0.01">
+            <button onclick="addMeat()">Add Meat</button>
+        </div>
+
+        <div class="meat-list" id="meatList">
+            <!-- Initial meat items -->
+            <div class="meat-item">
+                <img src="./images/beef.jpg" alt="Beef">
+                <label for="Beef">Beef (per kg): ₹800.00</label>
+                <input type="number" id="Beef" placeholder="kg" min="0">
+            </div>
+            <div class="meat-item">
+                <img src="./images/chicken.jpg" alt="Chicken">
+                <label for="Chicken">Chicken (per kg): ₹120.00</label>
+                <input type="number" id="Chicken" placeholder="kg" min="0">
+            </div>
+            <div class="meat-item">
+                <img src="./images/pork.jpg" alt="Pork">
+                <label for="Pork">Pork (per kg): ₹400.00</label>
+                <input type="number" id="Pork" placeholder="kg" min="0">
+            </div>
+            <div class="meat-item">
+                <img src="./images/lamb.jpg" alt="Lamb">
+                <label for="Lamb">Lamb (per kg): ₹850.00</label>
+                <input type="number" id="Lamb" placeholder="kg" min="0">
+            </div>
+        </div>
+
+        <div class="total" id="total">
+            Total: ₹0
+        </div>
+
+        <div class="qr-code" id="qrCode">
+            <img src="./images/QR.png" alt="pay QR code">
+        </div>
+
+        <button class="print-button" onclick="saveAndPrintBill()">Print Bill</button>
+    </div>
+
+    <div class="sales-container">
+        <!-- Button to show the sales section -->
+        <button class="print-button-sales" onclick="toggleSalesSection()">View Sales Details</button>
+    </div>
+
+    <div class="container" id="salesSection">
+        <h2>Sales Data</h2>
+        <input type="date" id="filterDate" placeholder="Filter by Date">
+        <input type="text" id="filterYear" placeholder="Filter by Year (e.g., 2024)">
+        <input type="text" id="filterCustomerName" placeholder="Filter by Customer Name">
+        <input type="text" id="filterCustomerMobile" placeholder="Filter by Customer Mobile">
+        <button onclick="applyFilters()">Apply Filters</button>
+    
+        <table id="salesTable">
+            <!-- Sales data will be inserted here -->
+        </table>
+    </div>
+
+    <script>
+        const meatList = document.getElementById('meatList');
+        const meatPrices = {
+            "Beef": 800.00,
+            "Chicken": 120.00,
+            "Pork": 400.00,
+            "Lamb": 850.00
+        };
+
+        // Retrieve sales data from localStorage or initialize an empty array
+        const salesData = JSON.parse(localStorage.getItem('salesData')) || [];
+
+        function addMeat() {
+            const meatName = document.getElementById('meatName').value.trim();
+            const meatPrice = parseFloat(document.getElementById('meatPrice').value);
+
+            if (meatName && !isNaN(meatPrice) && meatPrice > 0) {
+                const meatItem = document.createElement('div');
+                meatItem.className = 'meat-item';
+                meatItem.innerHTML = `
+                    <img src="https://via.placeholder.com/100?text=${encodeURIComponent(meatName)}" alt="${meatName}">
+                    <label for="${meatName}">${meatName} (per kg): ₹${meatPrice.toFixed(2)}</label>
+                    <input type="number" id="${meatName}" placeholder="kg" min="0">
+                `;
+                meatList.appendChild(meatItem);
+                meatPrices[meatName] = meatPrice;
+
+                // Clear the input fields
+                document.getElementById('meatName').value = '';
+                document.getElementById('meatPrice').value = '';
+
+                // Update total in real-time
+                document.querySelectorAll('.meat-item input').forEach(input => {
+                    input.addEventListener('input', () => {
+                        document.getElementById('total').innerText = 'Total: ₹' + calculateTotal().total.toFixed(2);
+                    });
+                });
+            } else {
+                alert('Please enter a valid meat name and price.');
+            }
+        }
+
+        function calculateTotal() {
+            let total = 0;
+            const items = Object.keys(meatPrices).map(meat => {
+                const price = meatPrices[meat];
+                const kg = parseFloat(document.getElementById(meat).value) || 0;
+                const cost = kg * price;
+                total += cost;
+                return { name: meat, price: price, kg: kg, cost: cost };
+            });
+
+            return { total: total, items: items };
+        }
+
+        function saveAndPrintBill() {
+            const customerName = document.getElementById('customerName').value.trim();
+            const customerMobile = document.getElementById('customerMobile').value.trim();
+
+            if (!customerName || !customerMobile) {
+                alert("Please enter both customer name and mobile number.");
+                return;
+            }
+
+            const shopName = "Meat Shop";
+            const date = new Date().toLocaleDateString();
+            const time = new Date().toLocaleTimeString();
+            const { total, items } = calculateTotal();
+
+            const qrCodeUrl = './images/QR.png';
+
+            const sale = {
+                date: date,
+                year: new Date().getFullYear().toString(),
+                customerName: customerName,
+                customerMobile: customerMobile,
+                items: items,
+                total: total
+            };
+
+            salesData.push(sale);
+            localStorage.setItem('salesData', JSON.stringify(salesData));
+
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write('<html><head><title>Print Bill</title></head><body>');
+            printWindow.document.write('<h1>' + shopName + '</h1>');
+            printWindow.document.write('<p>Date: ' + date + ' Time: ' + time + '</p>');
+            printWindow.document.write('<p>Customer: ' + customerName + '</p>');
+            printWindow.document.write('<p>Mobile: ' + customerMobile + '</p>');
+            printWindow.document.write('<h2>Items:</h2><ul>');
+            items.forEach(item => {
+                if (item.kg > 0) {
+                    printWindow.document.write('<li>' + item.name + ': ' + item.kg + ' kg @ ₹' + item.price.toFixed(2) + ' = ₹' + item.cost.toFixed(2) + '</li>');
+                }
+            });
+            printWindow.document.write('</ul>');
+            printWindow.document.write('<p><strong>Total: ₹' + total.toFixed(2) + '</strong></p>');
+            printWindow.document.write('<img src="' + qrCodeUrl + '" alt="QR Code" style="width:150px;height:150px;" >');
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function toggleSalesSection() {
+            const salesSection = document.getElementById('salesSection');
+            salesSection.style.display = salesSection.style.display === 'none' ? 'block' : 'none';
+            if (salesSection.style.display === 'block') {
+                updateSalesTable(salesData);
+            }
+        }
+
+        function updateSalesTable(data) {
+            const salesTable = document.getElementById('salesTable');
+            salesTable.innerHTML = '';
+
+            if (data.length === 0) {
+                salesTable.innerHTML = '<tr><td>No sales data available</td></tr>';
+                return;
+            }
+
+            const headers = ['Date', 'Customer Name', 'Mobile', 'Items', 'Total'];
+            let tableHtml = '<tr>';
+            headers.forEach(header => {
+                tableHtml += '<th>' + header + '</th>';
+            });
+            tableHtml += '</tr>';
+
+            data.forEach(sale => {
+                tableHtml += '<tr>';
+                tableHtml += '<td>' + sale.date + '</td>';
+                tableHtml += '<td>' + sale.customerName + '</td>';
+                tableHtml += '<td>' + sale.customerMobile + '</td>';
+                tableHtml += '<td>';
+                sale.items.forEach(item => {
+                    if (item.kg > 0) {
+                        tableHtml += item.name + ': ' + item.kg + 'kg @ ₹' + item.price.toFixed(2) + ' = ₹' + item.cost.toFixed(2) + '<br>';
+                    }
+                });
+                tableHtml += '</td>';
+                tableHtml += '<td>₹' + sale.total.toFixed(2) + '</td>';
+                tableHtml += '</tr>';
+            });
+
+            salesTable.innerHTML = tableHtml;
+        }
+
+        function applyFilters() {
+            const filterDate = document.getElementById('filterDate').value;
+            const filterYear = document.getElementById('filterYear').value.trim();
+            const filterCustomerName = document.getElementById('filterCustomerName').value.trim().toLowerCase();
+            const filterCustomerMobile = document.getElementById('filterCustomerMobile').value.trim();
+
+            const filteredData = salesData.filter(sale => {
+                const dateMatches = !filterDate || sale.date === new Date(filterDate).toLocaleDateString();
+                const yearMatches = !filterYear || sale.year === filterYear;
+                const nameMatches = !filterCustomerName || sale.customerName.toLowerCase().includes(filterCustomerName);
+                const mobileMatches = !filterCustomerMobile || sale.customerMobile.includes(filterCustomerMobile);
+
+                return dateMatches && yearMatches && nameMatches && mobileMatches;
+            });
+
+            updateSalesTable(filteredData);
+        }
+
+        // Initialize total display
+        document.querySelectorAll('.meat-item input').forEach(input => {
+            input.addEventListener('input', () => {
+                document.getElementById('total').innerText = 'Total: ₹' + calculateTotal().total.toFixed(2);
+            });
+        });
+    </script>
+</body>
+</html>
